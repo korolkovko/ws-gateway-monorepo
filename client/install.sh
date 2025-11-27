@@ -124,9 +124,52 @@ chown "$INSTALL_USER:$INSTALL_USER" "$CONFIG_DIR/routing_config.yaml"
 echo "✅ Configuration files copied"
 echo ""
 
-# Install systemd service
-echo "🔧 Installing systemd service..."
-cp ws-client.service "/etc/systemd/system/$SERVICE_NAME.service"
+# Create and install systemd service
+echo "🔧 Creating systemd service..."
+cat > "/etc/systemd/system/$SERVICE_NAME.service" << EOF
+[Unit]
+Description=WebSocket Proxy Client for Payment Gateway
+Documentation=https://github.com/korolkovko/ws-gateway-monorepo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=$INSTALL_USER
+Group=$INSTALL_USER
+
+# Environment files (load in order)
+EnvironmentFile=-/etc/ws-client/.env
+EnvironmentFile=-/home/$INSTALL_USER/.ws-client/.env
+
+# Configuration paths
+Environment="ROUTING_CONFIG_PATH=/etc/ws-client/routing_config.yaml"
+
+# Working directory for logs
+WorkingDirectory=/var/log/ws-client
+
+# Start command (uses installed wheel package)
+ExecStart=/usr/bin/python3 -m ws_client
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=5min
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ws-client
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
 echo "✅ Service installed"
 echo ""
