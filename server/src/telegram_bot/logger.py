@@ -1,8 +1,11 @@
 import structlog
-from typing import Optional
+from typing import Optional, Dict, Any
 from telegram import Bot
 from telegram.error import TelegramError
+from telegram.constants import ParseMode
 import asyncio
+import json
+import html as html_lib
 
 from src.config import settings
 
@@ -54,6 +57,7 @@ class TelegramLogHandler:
                         await self.bot.send_message(
                             chat_id=self.chat_id,
                             text=message,
+                            parse_mode=ParseMode.HTML,
                             disable_notification=True
                         )
                     except TelegramError as e:
@@ -87,8 +91,49 @@ class TelegramLogHandler:
         message = "\n".join(lines)
         await self.log(message)
 
-    async def log_request(self, kiosk_id: str, message_data: dict, operation_type: str = None):
-        """Log incoming request"""
+    def _format_json(self, data: Any, max_length: int = 500) -> str:
+        """Format data as pretty JSON with HTML escaping"""
+        try:
+            json_str = json.dumps(data, ensure_ascii=False, indent=2)
+            if len(json_str) > max_length:
+                json_str = json_str[:max_length] + "\n  ... (truncated)"
+            # Escape HTML characters
+            json_str = html_lib.escape(json_str)
+            return f"<pre>{json_str}</pre>"
+        except:
+            return f"<code>{html_lib.escape(str(data)[:max_length])}</code>"
+
+    def _extract_key_fields(self, data: dict, operation_type: str = None) -> Dict[str, Any]:
+        """Extract key fields from response data based on operation type"""
+        key_fields = {}
+
+        # Common fields
+        if 'status' in data:
+            key_fields['status'] = data['status']
+        if 'order_id' in data:
+            key_fields['order'] = f"#{data['order_id']}"
+
+        # Fiscal-specific fields
+        if operation_type == 'fiscal' and 'fiscal_receipt' in data:
+            receipt = data['fiscal_receipt']
+            if 'fiscal_document_number' in receipt:
+                key_fields['fd'] = receipt['fiscal_document_number']
+            if 'ofd_reg_number' in receipt:
+                key_fields['ofd'] = receipt['ofd_reg_number']
+            if 'fn_number' in receipt:
+                key_fields['fn'] = receipt['fn_number']
+
+        # Payment-specific fields
+        if operation_type == 'payment':
+            if 'transaction_id' in data:
+                key_fields['transaction'] = data['transaction_id']
+            if 'amount' in data or 'sum' in data:
+                key_fields['amount'] = f"{data.get('amount', data.get('sum', 0))}₽"
+
+        return key_fields
+
+    async def log_request(self, kiosk_id: str, message_data: dict, operation_type: str = None, http_method: str = None):
+        """Log incoming request with improved formatting"""
         # Map operation types to emojis
         operation_emojis = {
             'payment': '💳',
@@ -103,13 +148,26 @@ class TelegramLogHandler:
             header += f" {operation_emojis[operation_type]}"
         header += " Request Received"
 
-        msg = f"""{header}
-  • Kiosk: {kiosk_id}
-  • Data: {str(message_data)[:200]}"""
+        # Format message with HTML
+        lines = [
+            f"<b>{header}</b>",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            f"📱 Kiosk: <code>{html_lib.escape(kiosk_id)}</code>"
+        ]
+
+        # Add HTTP method if provided
+        if http_method:
+            lines.append(f"🌐 Method: <b>{html_lib.escape(http_method)}</b>")
+
+        # Add formatted JSON
+        lines.append("\nRequest:")
+        lines.append(self._format_json(message_data))
+
+        msg = "\n".join(lines)
         await self.log(msg)
 
     async def log_response(self, kiosk_id: str, response_data: dict, latency: float, operation_type: str = None):
-        """Log response sent"""
+        """Log response sent with improved formatting"""
         # Map operation types to emojis
         operation_emojis = {
             'payment': '💳',
@@ -124,10 +182,34 @@ class TelegramLogHandler:
             header += f" {operation_emojis[operation_type]}"
         header += " Response Sent"
 
-        msg = f"""{header}
-  • Kiosk: {kiosk_id}
-  • Latency: {latency:.3f}s
-  • Data: {str(response_data)[:200]}"""
+        # Format message with HTML
+        lines = [
+            f"<b>{header}</b>",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            f"📱 Kiosk: <code>{html_lib.escape(kiosk_id)}</code>",
+            f"⏱ Latency: <b>{latency:.3f}s</b>"
+        ]
+
+        # Extract and show key fields
+        key_fields = self._extract_key_fields(response_data, operation_type)
+        if key_fields:
+            lines.append("")
+            if 'status' in key_fields:
+                status = key_fields['status']
+                status_emoji = "✅" if status in ['OK', 'success', 'completed'] else "❌"
+                lines.append(f"{status_emoji} Status: <b>{html_lib.escape(str(status))}</b>")
+
+            # Add other key fields
+            for key, value in key_fields.items():
+                if key != 'status':
+                    key_display = key.replace('_', ' ').title()
+                    lines.append(f"  • {key_display}: <code>{html_lib.escape(str(value))}</code>")
+
+        # Add formatted JSON
+        lines.append("\nFull Response:")
+        lines.append(self._format_json(response_data))
+
+        msg = "\n".join(lines)
         await self.log(msg)
 
     async def log_connection(self, kiosk_id: str, status: str):

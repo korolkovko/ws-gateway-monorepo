@@ -86,7 +86,8 @@ async def send_message(request: Request, message: Dict[str, Any]) -> Dict[str, A
 
     # Log request to Telegram
     from src.telegram_bot.logger import telegram_log_handler
-    asyncio.create_task(telegram_log_handler.log_request(kiosk_id, message, operation_type))
+    http_method = request.headers.get('header-http-method', 'POST').upper()
+    asyncio.create_task(telegram_log_handler.log_request(kiosk_id, message, operation_type, http_method))
 
     # Send full request to kiosk and wait for response
     response = await ws_manager.send_and_wait(
