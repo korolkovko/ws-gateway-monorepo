@@ -36,13 +36,15 @@ class PaymentGatewayProxy:
         ws_url: str,
         ws_token: str,
         routing_config_path: str = "routing_config.yaml",
-        log_level: str = "INFO"
+        log_level: str = "INFO",
+        health_port: int = 9091
     ):
         self.ws_url = ws_url
         self.ws_token = ws_token
         self.websocket: Optional[websockets.WebSocketClientProtocol] = None
         self.running = True
         self.start_time = time.time()
+        self.health_port = health_port
 
         # HTTP session for gateway requests (reusable, with connection pooling)
         self.http_session: Optional[aiohttp.ClientSession] = None
@@ -448,16 +450,16 @@ class PaymentGatewayProxy:
         })
 
     async def _start_health_server(self):
-        """Start HTTP health check server on localhost:9090"""
+        """Start HTTP health check server"""
         app = web.Application()
         app.router.add_get('/health', self._health_handler)
 
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, 'localhost', 9090)
+        site = web.TCPSite(runner, 'localhost', self.health_port)
         await site.start()
 
-        self.logger.info("🏥 Health check server started on http://localhost:9090/health")
+        self.logger.info(f"🏥 Health check server started on http://localhost:{self.health_port}/health")
         return runner
 
     async def run(self):

@@ -30,6 +30,7 @@ def main():
     ws_url = os.getenv('WS_SERVER_URL')
     ws_token = os.getenv('WS_TOKEN')
     log_level = os.getenv('LOG_LEVEL', 'INFO')
+    health_port = int(os.getenv('HEALTH_CHECK_PORT', '9091'))
 
     # Routing config paths (priority order)
     routing_config_paths = [
@@ -54,6 +55,7 @@ def main():
         print("  WS_TOKEN       - JWT authentication token")
         print("\nOptional:")
         print("  LOG_LEVEL              - Log level (default: INFO)")
+        print("  HEALTH_CHECK_PORT      - Health check server port (default: 9091)")
         print("  ROUTING_CONFIG_PATH    - Path to routing_config.yaml")
         print("\nConfiguration locations (checked in order):")
         print("  1. Current directory: .env")
@@ -73,7 +75,8 @@ def main():
         ws_url=ws_url,
         ws_token=ws_token,
         routing_config_path=routing_config_path,
-        log_level=log_level
+        log_level=log_level,
+        health_port=health_port
     )
 
     # Handle shutdown signals

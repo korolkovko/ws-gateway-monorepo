@@ -27,6 +27,11 @@ jobs:
         cd client
         python -m build
 
+    - name: Get wheel filename
+      if: github.event_name == 'release'
+      id: wheel
+      run: echo "filename=$(ls client/dist/*.whl | xargs -n 1 basename)" >> $GITHUB_OUTPUT
+
     - name: Upload wheel to release
       if: github.event_name == 'release'
       uses: actions/upload-release-asset@v1
@@ -34,8 +39,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: client/dist/ws_client-1.0.0-py3-none-any.whl
-        asset_name: ws_client-1.0.0-py3-none-any.whl
+        asset_path: client/dist/${{ steps.wheel.outputs.filename }}
+        asset_name: ${{ steps.wheel.outputs.filename }}
         asset_content_type: application/zip
 
     - name: Upload wheel as artifact
