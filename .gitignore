@@ -62,17 +62,16 @@ client/dist/
 client/build/
 client/*.egg-info/
 
-# Old code (to be removed later)
-proxy-client/
-src/
-main.py
-requirements.txt
-Procfile
-railway.json
-railway.toml
-runtime.txt
-README.md
-docs/
+# Old code in root (ignore only in root, not in server/)
+/proxy-client/
+/src/
+/main.py
+/requirements.txt
+/Procfile
+/railway.json
+/railway.toml
+/runtime.txt
+/docs/
 
 # Temporary files
 *.tmp
