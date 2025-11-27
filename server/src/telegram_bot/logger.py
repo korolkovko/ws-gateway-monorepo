@@ -152,12 +152,12 @@ class TelegramLogHandler:
         lines = [
             f"<b>{header}</b>",
             "━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            f"📱 Kiosk: <code>{html_lib.escape(kiosk_id)}</code>"
+            f"Kiosk: {html_lib.escape(kiosk_id)}"
         ]
 
         # Add HTTP method if provided
         if http_method:
-            lines.append(f"🌐 Method: <b>{html_lib.escape(http_method)}</b>")
+            lines.append(f"Method: {html_lib.escape(http_method)}")
 
         # Add formatted JSON
         lines.append("\nRequest:")
@@ -186,7 +186,7 @@ class TelegramLogHandler:
         lines = [
             f"<b>{header}</b>",
             "━━━━━━━━━━━━━━━━━━━━━━━━━━",
-            f"📱 Kiosk: <code>{html_lib.escape(kiosk_id)}</code>",
+            f"Kiosk: {html_lib.escape(kiosk_id)}",
             f"⏱ Latency: <b>{latency:.3f}s</b>"
         ]
 
@@ -196,8 +196,19 @@ class TelegramLogHandler:
             lines.append("")
             if 'status' in key_fields:
                 status = key_fields['status']
-                status_emoji = "✅" if status in ['OK', 'success', 'completed'] else "❌"
-                lines.append(f"{status_emoji} Status: <b>{html_lib.escape(str(status))}</b>")
+                status_lower = str(status).lower()
+                # Show ✅ for success, ❌ only for actual errors
+                if status_lower in ['ok', 'success', 'completed', 'succeed']:
+                    status_emoji = "✅"
+                elif status_lower in ['error', 'failed', 'timeout']:
+                    status_emoji = "❌"
+                else:
+                    status_emoji = ""  # No emoji for other statuses
+
+                if status_emoji:
+                    lines.append(f"{status_emoji} Status: <b>{html_lib.escape(str(status))}</b>")
+                else:
+                    lines.append(f"Status: <b>{html_lib.escape(str(status))}</b>")
 
             # Add other key fields
             for key, value in key_fields.items():
