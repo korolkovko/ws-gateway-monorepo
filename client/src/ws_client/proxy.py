@@ -20,6 +20,8 @@ from logging.handlers import RotatingFileHandler
 from aiohttp import web
 from urllib.parse import urlencode
 
+from . import __version__
+
 
 class PaymentGatewayProxy:
     """
@@ -442,6 +444,7 @@ class PaymentGatewayProxy:
 
         return web.json_response({
             'status': status,
+            'version': __version__,
             'ws_connected': ws_connected,
             'uptime_seconds': round(time.time() - self.start_time, 2),
             'stats': self.stats,
