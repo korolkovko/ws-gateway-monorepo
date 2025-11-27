@@ -15,7 +15,9 @@ Backend (FastAPI) → Server (Railway) ←WebSocket→ Client (Kiosk) → Paymen
 - **Server** ([server/](server/)) - WebSocket сервер на Railway с Telegram управлением
 - **Client** ([client/](client/)) - Python клиент на киосках
 
-## Ключевые особенности v1.0.0
+⚠️ **Внимание:** Директории `proxy-client/` и `docs/` содержат устаревший код и документацию. Используйте актуальные `client/` и документацию в корне репозитория.
+
+## Ключевые особенности v1.0.2
 
 ### Улучшения архитектуры
 
@@ -32,8 +34,15 @@ Backend (FastAPI) → Server (Railway) ←WebSocket→ Client (Kiosk) → Paymen
 ✅ **Production Ready**
 - Wheel packaging для легкой установки
 - systemd service с автозапуском
-- Health check endpoints
+- Health check endpoints с версией
+- Настраиваемый порт health check (по умолчанию 9091)
 - Ротация логов
+
+✅ **Telegram Logging (Server)**
+- HTML-форматирование с моноширинным JSON
+- Отображение HTTP методов (GET/POST)
+- Краткая сводка ключевых полей + полный JSON
+- Автоматическая группировка запросов/ответов
 
 ### Упрощенная установка
 
@@ -61,14 +70,14 @@ python main.py
 cd client/
 pip install build
 python -m build
-# Получаете: dist/ws_client-1.0.0-py3-none-any.whl
+# Получаете: dist/ws_client-1.0.2-py3-none-any.whl
 ```
 
 #### Установка на киоске
 
 ```bash
 # Скопируйте wheel на киоск
-scp dist/ws_client-1.0.0-py3-none-any.whl kiosk@kiosk-ip:/tmp/
+scp dist/ws_client-1.0.2-py3-none-any.whl kiosk@kiosk-ip:/tmp/
 
 # На киоске:
 cd /tmp
@@ -154,6 +163,7 @@ GET http://localhost:8011/api/v1/fiscal?check_id=123&status=pending
 WS_SERVER_URL=wss://your-server.railway.app/ws
 WS_TOKEN=your_jwt_token_here
 LOG_LEVEL=INFO
+HEALTH_CHECK_PORT=9091
 ```
 
 ### routing_config.yaml
@@ -185,7 +195,14 @@ curl https://your-server.railway.app/health
 
 **Client:**
 ```bash
-curl http://localhost:9090/health
+curl http://localhost:9091/health
+# Response includes client version:
+# {
+#   "status": "healthy",
+#   "version": "1.0.2",
+#   "ws_connected": true,
+#   ...
+# }
 ```
 
 ### Логи
@@ -222,18 +239,26 @@ https://your-server.railway.app/dashboard
 
 ```
 ws-monorepo/
-├── server/          # WebSocket сервер
+├── server/              # WebSocket сервер
 │   ├── src/
 │   ├── main.py
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── README.md
 │
-├── client/          # Proxy клиент
+├── client/              # Proxy клиент
 │   ├── src/
 │   │   └── ws_client/
 │   ├── pyproject.toml
-│   └── install.sh
+│   ├── install.sh
+│   └── README.md
 │
-└── docs/            # Документация
+├── RAILWAY_DEPLOY.md    # Деплой на Railway
+├── CLIENT_INSTALL.md    # Установка клиента
+├── .github/
+│   └── workflows/       # GitHub Actions
+│
+├── proxy-client/        # ⚠️ DEPRECATED - старый клиент
+└── docs/                # ⚠️ DEPRECATED - старая документация
 ```
 
 ### Сборка клиента
@@ -241,7 +266,7 @@ ws-monorepo/
 ```bash
 cd client/
 python -m build
-# dist/ws_client-1.0.0-py3-none-any.whl
+# dist/ws_client-1.0.2-py3-none-any.whl
 ```
 
 ### Тестирование
@@ -322,6 +347,26 @@ sudo systemctl restart ws-client
 
 ## Changelog
 
+### v1.0.2 (2025-11-27)
+
+**Features:**
+- ✅ Версия клиента в health check endpoint
+- ✅ Улучшенное Telegram логирование с HTML-форматированием
+- ✅ Моноширинный JSON в Telegram сообщениях
+- ✅ Отображение HTTP метода в Telegram логах
+
+**Improvements:**
+- 🚀 GitHub Actions автоматически собирает wheel при релизе
+
+### v1.0.1 (2025-11-27)
+
+**Features:**
+- ✅ Настраиваемый порт health check через HEALTH_CHECK_PORT
+- ✅ Изменен порт по умолчанию с 9090 на 9091
+
+**Fixes:**
+- 🐛 Исправлены права доступа для GitHub Actions
+
 ### v1.0.0 (2025-01-XX)
 
 **Breaking Changes:**
@@ -342,9 +387,7 @@ sudo systemctl restart ws-client
 - 🚀 Правильный matching ответов
 - 🚀 Поддержка параллельных запросов
 - 🚀 Упрощенная установка
-- 🚀 Профессиональный depl
-
-oyment
+- 🚀 Профессиональный deployment
 
 ## Лицензия
 

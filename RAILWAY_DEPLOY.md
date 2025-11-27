@@ -37,6 +37,7 @@ git push origin main
 # Telegram Bot (обязательно)
 TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
 TELEGRAM_ADMIN_IDS=your_telegram_id
+TELEGRAM_LOG_CHAT_ID=your_chat_id  # опционально, для логирования запросов/ответов
 
 # JWT Secret (обязательно)
 JWT_SECRET=your_random_secret_min_32_chars
@@ -90,6 +91,7 @@ open https://your-url.railway.app/dashboard
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
+| `TELEGRAM_LOG_CHAT_ID` | - | ID чата для логирования запросов/ответов |
 | `LOG_LEVEL` | `INFO` | Уровень логирования |
 | `KIOSK_RESPONSE_TIMEOUT` | `45` | Таймаут ответа киоска (секунды) |
 | `ALLOW_DUPLICATE_CONNECTIONS` | `false` | Разрешить дубликаты подключений |

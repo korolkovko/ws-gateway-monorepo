@@ -32,16 +32,16 @@ source venv/bin/activate
 **Вариант A: Из GitHub Release**
 ```bash
 # Скачай wheel из релиза
-wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.0/ws_client-1.0.0-py3-none-any.whl
+wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.2/ws_client-1.0.2-py3-none-any.whl
 
 # Установи
-pip install ws_client-1.0.0-py3-none-any.whl
+pip install ws_client-1.0.2-py3-none-any.whl
 ```
 
 **Вариант B: Из локального файла**
 ```bash
 # Скопируй wheel на сервер и установи
-pip install /path/to/ws_client-1.0.0-py3-none-any.whl
+pip install /path/to/ws_client-1.0.2-py3-none-any.whl
 ```
 
 ### Шаг 4: Настройка конфигурации
@@ -52,6 +52,7 @@ cat > .env << 'EOF'
 WS_SERVER_URL=wss://your-server.railway.app/ws
 WS_TOKEN=your_jwt_token_here
 LOG_LEVEL=INFO
+HEALTH_CHECK_PORT=9091
 EOF
 
 # Создай routing_config.yaml
@@ -120,10 +121,10 @@ sudo useradd -r -s /bin/false -M -d /opt/ws-client kiosk
 ```bash
 # Скачай wheel
 cd /tmp
-wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.0/ws_client-1.0.0-py3-none-any.whl
+wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.2/ws_client-1.0.2-py3-none-any.whl
 
 # Установи глобально (для всех пользователей)
-sudo pip3 install ws_client-1.0.0-py3-none-any.whl
+sudo pip3 install ws_client-1.0.2-py3-none-any.whl
 ```
 
 ### Шаг 4: Создание директорий
@@ -147,6 +148,7 @@ sudo tee /etc/ws-client/.env > /dev/null << 'EOF'
 WS_SERVER_URL=wss://your-server.railway.app/ws
 WS_TOKEN=your_jwt_token_here
 LOG_LEVEL=INFO
+HEALTH_CHECK_PORT=9091
 EOF
 
 # Создай routing_config.yaml
@@ -262,7 +264,7 @@ sudo systemctl disable ws-client
 ```bash
 # Скачай wheel и install.sh из репозитория
 cd /tmp
-wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.0/ws_client-1.0.0-py3-none-any.whl
+wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.2/ws_client-1.0.2-py3-none-any.whl
 wget https://raw.githubusercontent.com/korolkovko/ws-gateway-monorepo/main/client/install.sh
 
 # Сделай скрипт исполняемым
@@ -343,10 +345,10 @@ cd ~/ws-client-test
 source venv/bin/activate
 
 # Скачай новую версию
-wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.1.0/ws_client-1.1.0-py3-none-any.whl
+wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.3/ws_client-1.0.3-py3-none-any.whl
 
 # Обнови
-pip install --upgrade ws_client-1.1.0-py3-none-any.whl
+pip install --upgrade ws_client-1.0.3-py3-none-any.whl
 
 # Перезапусти (Ctrl+C и снова python -m ws_client)
 ```
@@ -356,10 +358,10 @@ pip install --upgrade ws_client-1.1.0-py3-none-any.whl
 ```bash
 # Скачай новую версию
 cd /tmp
-wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.1.0/ws_client-1.1.0-py3-none-any.whl
+wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/v1.0.3/ws_client-1.0.3-py3-none-any.whl
 
 # Обнови
-sudo pip3 install --upgrade ws_client-1.1.0-py3-none-any.whl
+sudo pip3 install --upgrade ws_client-1.0.3-py3-none-any.whl
 
 # Перезапусти сервис
 sudo systemctl restart ws-client

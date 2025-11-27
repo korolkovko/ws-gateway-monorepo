@@ -7,7 +7,7 @@ WebSocket клиент для подключения локальных плат
 ### Из wheel файла
 
 ```bash
-pip install ws_client-1.0.0-py3-none-any.whl
+pip install ws_client-1.0.2-py3-none-any.whl
 ```
 
 ### Из исходников (для разработки)
@@ -40,6 +40,9 @@ WS_TOKEN=your_jwt_token_here
 
 # Логирование
 LOG_LEVEL=INFO
+
+# Health Check Server
+HEALTH_CHECK_PORT=9091
 ```
 
 Создайте файл `routing_config.yaml`:
@@ -48,12 +51,11 @@ LOG_LEVEL=INFO
 routes:
   payment:
     url: "http://127.0.0.1:8011/api/v1/payment"
-    method: POST
-    timeout: 35
+    timeout: 35  # HTTP метод берется из Header-Http-Method
 
   fiscal:
     url: "http://127.0.0.1:8011/api/v1/fiscal"
-    timeout: 35  # метод берется из Header-Http-Method
+    timeout: 35
 
 default:
   url: "http://127.0.0.1:8080"
@@ -64,7 +66,7 @@ default:
 
 ```bash
 # 1. Установить wheel
-sudo pip install ws_client-1.0.0-py3-none-any.whl
+sudo pip install ws_client-1.0.2-py3-none-any.whl
 
 # 2. Создать конфигурационные директории
 sudo mkdir -p /etc/ws-client
@@ -98,21 +100,22 @@ python -m build
 
 # Wheel файл будет в dist/
 ls dist/
-# ws_client-1.0.0-py3-none-any.whl
+# ws_client-1.0.2-py3-none-any.whl
 ```
 
 ## Health Check
 
-Клиент запускает HTTP сервер на `localhost:9090`:
+Клиент запускает HTTP сервер на `localhost:9091` (настраивается через `HEALTH_CHECK_PORT`):
 
 ```bash
-curl http://localhost:9090/health
+curl http://localhost:9091/health
 ```
 
 Ответ:
 ```json
 {
   "status": "healthy",
+  "version": "1.0.2",
   "ws_connected": true,
   "uptime_seconds": 12345.67,
   "stats": {
