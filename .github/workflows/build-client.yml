@@ -1,0 +1,46 @@
+name: Build Client Wheel
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+
+    - name: Build wheel
+      run: |
+        cd client
+        python -m build
+
+    - name: Upload wheel to release
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: client/dist/ws_client-1.0.0-py3-none-any.whl
+        asset_name: ws_client-1.0.0-py3-none-any.whl
+        asset_content_type: application/zip
+
+    - name: Upload wheel as artifact
+      if: github.event_name != 'release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: wheel
+        path: client/dist/*.whl

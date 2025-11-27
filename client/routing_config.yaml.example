@@ -1,0 +1,30 @@
+# Routing configuration for operation types
+# Maps Header-Operation-Type values to gateway endpoints
+
+routes:
+  # Payment operations
+  payment:
+    url: "http://127.0.0.1:8011/api/v1/dcpayment/payment"
+    timeout: 35
+
+  # Fiscal operations (supports both GET and POST)
+  # HTTP method is determined by Header-Http-Method from backend
+  fiscal:
+    url: "http://127.0.0.1:8011/api/v1/fiscal"
+    timeout: 35
+
+  # KDS operations
+  kds:
+    url: "http://127.0.0.1:8012/api/v1/kds"
+    timeout: 30
+
+  # Print operations
+  print:
+    url: "http://127.0.0.1:8013/api/v1/print"
+    timeout: 20
+
+# Default route (optional)
+# Used when operation type doesn't match any route above
+default:
+  url: "http://127.0.0.1:8080/api/v1/default"
+  timeout: 30

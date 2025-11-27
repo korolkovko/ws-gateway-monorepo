@@ -1,0 +1,41 @@
+[Unit]
+Description=WebSocket Proxy Client for Payment Gateway
+Documentation=https://github.com/your-org/ws-monorepo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kiosk
+Group=kiosk
+
+# Environment files (load in order)
+EnvironmentFile=-/etc/ws-client/.env
+EnvironmentFile=-/home/kiosk/.ws-client/.env
+
+# Configuration paths
+Environment="ROUTING_CONFIG_PATH=/etc/ws-client/routing_config.yaml"
+
+# Working directory for logs
+WorkingDirectory=/var/log/ws-client
+
+# Start command (uses installed wheel package)
+ExecStart=/usr/bin/python3 -m ws_client
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=5min
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ws-client
+
+[Install]
+WantedBy=multi-user.target
