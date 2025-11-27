@@ -65,18 +65,52 @@ else
 fi
 echo ""
 
-# Copy configuration files
+# Create configuration files
 if [ ! -f "$CONFIG_DIR/.env" ]; then
-    echo "⚙️  Setting up configuration..."
-    cp .env.example "$CONFIG_DIR/.env"
-    echo "📝 Edit $CONFIG_DIR/.env with your settings"
+    echo "⚙️  Creating default configuration..."
+    cat > "$CONFIG_DIR/.env" << 'EOF'
+# WebSocket Server Configuration
+WS_SERVER_URL=wss://your-server.railway.app/ws
+WS_TOKEN=your_jwt_token_here
+
+# Routing Configuration (optional)
+ROUTING_CONFIG_PATH=/etc/ws-client/routing_config.yaml
+
+# Logging
+LOG_LEVEL=INFO
+
+# Health Check Server
+HEALTH_CHECK_PORT=9091
+EOF
+    echo "✅ Created $CONFIG_DIR/.env"
 else
     echo "✅ Configuration file already exists"
 fi
 
 if [ ! -f "$CONFIG_DIR/routing_config.yaml" ]; then
-    cp routing_config.yaml.example "$CONFIG_DIR/routing_config.yaml"
-    echo "📝 Edit $CONFIG_DIR/routing_config.yaml with your routes"
+    cat > "$CONFIG_DIR/routing_config.yaml" << 'EOF'
+routes:
+  payment:
+    url: "http://127.0.0.1:8011/api/v1/payment"
+    timeout: 35
+
+  fiscal:
+    url: "http://127.0.0.1:8011/api/v1/fiscal"
+    timeout: 35
+
+  kds:
+    url: "http://127.0.0.1:8012/api/v1/kds"
+    timeout: 30
+
+  print:
+    url: "http://127.0.0.1:8013/api/v1/print"
+    timeout: 20
+
+default:
+  url: "http://127.0.0.1:8080"
+  timeout: 30
+EOF
+    echo "✅ Created $CONFIG_DIR/routing_config.yaml"
 else
     echo "✅ Routing config already exists"
 fi
