@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for uploading to releases
 
     steps:
     - uses: actions/checkout@v4
@@ -27,21 +29,11 @@ jobs:
         cd client
         python -m build
 
-    - name: Get wheel filename
-      if: github.event_name == 'release'
-      id: wheel
-      run: echo "filename=$(ls client/dist/*.whl | xargs -n 1 basename)" >> $GITHUB_OUTPUT
-
     - name: Upload wheel to release
       if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: client/dist/${{ steps.wheel.outputs.filename }}
-        asset_name: ${{ steps.wheel.outputs.filename }}
-        asset_content_type: application/zip
+        files: client/dist/*.whl
 
     - name: Upload wheel as artifact
       if: github.event_name != 'release'
