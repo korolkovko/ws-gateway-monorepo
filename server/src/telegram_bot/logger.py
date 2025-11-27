@@ -187,7 +187,7 @@ class TelegramLogHandler:
             f"<b>{header}</b>",
             "━━━━━━━━━━━━━━━━━━━━━━━━━━",
             f"Kiosk: {html_lib.escape(kiosk_id)}",
-            f"⏱ Latency: <b>{latency:.3f}s</b>"
+            f"Latency: <b>{latency:.3f}s</b>"
         ]
 
         # Extract and show key fields
