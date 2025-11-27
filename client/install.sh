@@ -44,16 +44,23 @@ echo "✅ Directories created"
 echo ""
 
 # Install Python package
-if [ -f "dist/ws_client-1.0.0-py3-none-any.whl" ]; then
-    echo "📦 Installing wheel package..."
-    pip3 install --upgrade dist/ws_client-1.0.0-py3-none-any.whl
+# Look for any version of wheel file in current directory
+WHEEL_FILE=$(ls ws_client-*-py3-none-any.whl 2>/dev/null | head -1)
+
+if [ -n "$WHEEL_FILE" ]; then
+    echo "📦 Found wheel: $WHEEL_FILE"
+    echo "📦 Installing package..."
+    python3 -m pip install --upgrade "$WHEEL_FILE"
     echo "✅ Package installed"
 else
-    echo "⚠️  Wheel file not found. Building from source..."
-    pip3 install build
-    python3 -m build
-    pip3 install --upgrade dist/ws_client-*.whl
-    echo "✅ Package built and installed"
+    echo "❌ Error: No wheel file found in current directory"
+    echo ""
+    echo "Please download the wheel file first:"
+    echo "  wget https://github.com/korolkovko/ws-gateway-monorepo/releases/download/vX.X.X/ws_client-X.X.X-py3-none-any.whl"
+    echo ""
+    echo "Or check latest release:"
+    echo "  https://github.com/korolkovko/ws-gateway-monorepo/releases/latest"
+    exit 1
 fi
 echo ""
 
@@ -112,5 +119,5 @@ echo "      or"
 echo "      sudo tail -f $LOG_DIR/proxy_*.log"
 echo ""
 echo "   6. Health check:"
-echo "      curl http://localhost:9090/health"
+echo "      curl http://localhost:9091/health"
 echo ""
