@@ -50,7 +50,8 @@ WHEEL_FILE=$(ls ws_client-*-py3-none-any.whl 2>/dev/null | head -1)
 if [ -n "$WHEEL_FILE" ]; then
     echo "📦 Found wheel: $WHEEL_FILE"
     echo "📦 Installing package..."
-    python3 -m pip install --upgrade "$WHEEL_FILE"
+    # Use --break-system-packages for modern distros (PEP 668)
+    python3 -m pip install --upgrade --break-system-packages "$WHEEL_FILE"
     echo "✅ Package installed"
 else
     echo "❌ Error: No wheel file found in current directory"
