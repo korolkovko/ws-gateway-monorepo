@@ -90,7 +90,7 @@ async def send_message(request: Request, message: Dict[str, Any]) -> Dict[str, A
     asyncio.create_task(telegram_log_handler.log_request(kiosk_id, message, operation_type, http_method))
 
     # Send full request to kiosk and wait for response
-    response = await ws_manager.send_and_wait(
+    result = await ws_manager.send_and_wait(
         kiosk_id=kiosk_id,
         message=full_request,  # Send headers + body
         timeout=settings.kiosk_response_timeout
@@ -104,24 +104,25 @@ async def send_message(request: Request, message: Dict[str, Any]) -> Dict[str, A
     await redis_client.increment_requests()
     await redis_client.add_latency(latency)
 
-    if response is None:
+    if result.response is None:
         # Timeout occurred
-        logger.error("kiosk_timeout", kiosk_id=kiosk_id, latency=latency)
+        logger.error("kiosk_timeout", kiosk_id=kiosk_id, request_id=result.request_id, latency=latency)
         await redis_client.increment_errors()
-        asyncio.create_task(telegram_log_handler.log_error("timeout", kiosk_id, f"Latency: {latency:.3f}s"))
+        asyncio.create_task(telegram_log_handler.log_error("timeout", kiosk_id, f"Request ID: {result.request_id}, Latency: {latency:.3f}s"))
         return {
             "status": "error",
             "error": "timeout",
-            "kiosk_id": kiosk_id
+            "kiosk_id": kiosk_id,
+            "request_id": result.request_id
         }
 
     # Return kiosk response as-is
-    logger.info("response_sent_to_backend", kiosk_id=kiosk_id, latency=latency)
+    logger.info("response_sent_to_backend", kiosk_id=kiosk_id, request_id=result.request_id, latency=latency)
 
     # Log response to Telegram
-    asyncio.create_task(telegram_log_handler.log_response(kiosk_id, response, latency, operation_type))
+    asyncio.create_task(telegram_log_handler.log_response(kiosk_id, result.response, latency, operation_type))
 
-    return response
+    return result.response
 
 
 @router.get("/health")

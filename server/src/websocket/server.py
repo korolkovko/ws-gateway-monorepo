@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from dataclasses import dataclass
 from typing import Dict, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 import structlog
@@ -11,6 +12,13 @@ from src.monitoring.metrics import metrics
 from src.config.settings import settings
 
 logger = structlog.get_logger()
+
+
+@dataclass
+class SendResult:
+    """Result of send_and_wait operation for proper request tracking"""
+    response: Optional[dict]
+    request_id: str
 
 
 async def _log_to_telegram(func, *args, **kwargs):
@@ -140,19 +148,21 @@ class WebSocketManager:
         """Check if kiosk is connected"""
         return kiosk_id in self.active_connections
 
-    async def send_and_wait(self, kiosk_id: str, message: dict, timeout: int) -> Optional[dict]:
+    async def send_and_wait(self, kiosk_id: str, message: dict, timeout: int) -> SendResult:
         """
-        Send message to kiosk and wait for response
-        Returns kiosk response or None if timeout/error
+        Send message to kiosk and wait for response.
+
+        Returns:
+            SendResult with response (or None if timeout/error) and request_id for tracking
         """
-        if kiosk_id not in self.active_connections:
-            logger.warning("kiosk_not_connected", kiosk_id=kiosk_id)
-            return None
-
-        websocket = self.active_connections[kiosk_id]
-
         # Generate UUID for request tracking (critical for parallel requests!)
         request_id = str(uuid.uuid4())
+
+        if kiosk_id not in self.active_connections:
+            logger.warning("kiosk_not_connected", kiosk_id=kiosk_id, request_id=request_id)
+            return SendResult(response=None, request_id=request_id)
+
+        websocket = self.active_connections[kiosk_id]
 
         # Add request_id to message before sending
         message["request_id"] = request_id
@@ -173,17 +183,17 @@ class WebSocketManager:
 
             logger.info("response_received_from_kiosk", kiosk_id=kiosk_id, request_id=request_id)
 
-            return response
+            return SendResult(response=response, request_id=request_id)
 
         except asyncio.TimeoutError:
             logger.error("kiosk_response_timeout", kiosk_id=kiosk_id, request_id=request_id, timeout=timeout)
             metrics.increment_errors("timeout")
-            return None
+            return SendResult(response=None, request_id=request_id)
 
         except Exception as e:
-            logger.error("error_sending_to_kiosk", kiosk_id=kiosk_id, error=str(e))
+            logger.error("error_sending_to_kiosk", kiosk_id=kiosk_id, request_id=request_id, error=str(e))
             metrics.increment_errors("send_error")
-            return None
+            return SendResult(response=None, request_id=request_id)
 
         finally:
             # Clean up pending response
